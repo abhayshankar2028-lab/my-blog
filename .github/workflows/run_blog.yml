@@ -1,40 +1,38 @@
-name: Auto Blog Poster
+name: Harsha Bhogle Style Blogger
+
 on:
-  workflow_dispatch: # Keeps manual button active
   schedule:
-    # Changed from '0 * * * *' to '27 * * * *'
-    # This runs at minute 27 of every hour (e.g. 1:27, 2:27)
-    - cron: '27 * * * *'
+    # This runs at 27 minutes past every hour (UTC)
+    - cron: "27 * * * *"
+  workflow_dispatch: # This adds a 'Run workflow' button for manual testing
 
 jobs:
-  update-blog:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 
 
-      - name: Setup Python
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
-      - name: Install Libraries
-        run: pip install feedparser huggingface_hub requests
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install feedparser huggingface_hub
 
-      - name: Run Script
+      - name: Run Harsha Style Script
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: python main.py
 
       - name: Commit and Push Changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _posts/*.md
-          git commit -m "Hourly Indian update" || echo "No changes found"
-          git pull --rebase origin main
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "New Bhogle-style post: $(date)" || echo "No changes to commit"
           git push
